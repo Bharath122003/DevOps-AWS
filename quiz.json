@@ -1,0 +1,102 @@
+[
+  {
+    "question": "Your team is deploying a microservices application using Docker containers on AWS ECS. During peak traffic, some containers are crashing due to memory constraints. You need to ensure containers are automatically replaced. Which ECS feature should you configure?",
+    "options": {
+      "A": "ECS Task Placement Strategies",
+      "B": "ECS Service with Auto Scaling and Health Checks",
+      "C": "Docker resource limits in the Dockerfile",
+      "D": "AWS Lambda for container orchestration"
+    },
+    "answer": "B",
+    "explanation": "ECS Services with Auto Scaling and Health Checks automatically monitor container health and restart failed tasks. Health checks detect when containers crash, and auto-scaling policies can increase task count during high memory usage. This is the standard AWS ECS pattern for self-healing deployments.",
+    "wrong_explanations": {
+      "A": "ECS Task Placement Strategies determine WHERE tasks run (spread vs. binpack) but do not handle automatic replacement of failed containers or scaling based on memory constraints.",
+      "C": "While Docker resource limits in Dockerfile are good practice, they do not automatically restart crashed containers or trigger AWS-level auto-scaling policies. Limits must be set at the ECS task definition level.",
+      "D": "AWS Lambda is a serverless compute service and is not designed for long-running container orchestration. ECS (Elastic Container Service) is the correct AWS service for managing Docker containers at scale."
+    },
+    "sources": [
+      "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-auto-scaling.html",
+      "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html"
+    ]
+  },
+  {
+    "question": "Your CI/CD pipeline uses Jenkins to build Docker images and push them to Amazon ECR. The pipeline fails intermittently with 'image already exists' errors when pushing the same tag. What is the best practice to resolve this?",
+    "options": {
+      "A": "Disable ECR image scanning to reduce push time",
+      "B": "Use semantic versioning or git commit SHA as image tags instead of static tags like 'latest'",
+      "C": "Increase the ECR repository size limit",
+      "D": "Run Docker push commands sequentially with sleep intervals"
+    },
+    "answer": "B",
+    "explanation": "Using semantic versioning (e.g., v1.0.1) or git commit SHAs as image tags ensures each build produces a unique tag. This prevents 'image already exists' errors and enables better version tracking, rollback capabilities, and follows CI/CD best practices. While 'latest' tag can be updated, using unique tags per build is more robust.",
+    "wrong_explanations": {
+      "A": "Image scanning is a security feature and disabling it does not solve the 'image already exists' error. The error occurs due to tag conflicts, not scanning delays.",
+      "C": "ECR repository size limits are not the cause of 'image already exists' errors. This error occurs when attempting to push an image with a tag that already exists in the repository.",
+      "D": "Adding sleep intervals between push commands is a workaround, not a solution. It does not address the root cause (duplicate tags) and creates unpredictable pipeline behavior and longer build times."
+    },
+    "sources": [
+      "https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-tag-mutability.html",
+      "https://semver.org/"
+    ]
+  },
+  {
+    "question": "You are using Terraform to manage AWS infrastructure. Your team has separate dev and prod environments with different instance types and configurations. What is the recommended approach to manage these variations without code duplication?",
+    "options": {
+      "A": "Create separate Terraform files for dev and prod with hardcoded values",
+      "B": "Use Terraform workspaces and variable files (.tfvars) to manage environment-specific configurations",
+      "C": "Use shell scripts to modify Terraform files before applying changes",
+      "D": "Manually create resources in dev, then use Terraform only for prod"
+    },
+    "answer": "B",
+    "explanation": "Terraform workspaces combined with environment-specific .tfvars files (e.g., dev.tfvars, prod.tfvars) is the recommended approach. Workspaces allow separate state files per environment, while .tfvars files inject environment-specific variables without duplicating code. This enables DRY (Don't Repeat Yourself) principle and maintains infrastructure-as-code best practices.",
+    "wrong_explanations": {
+      "A": "Hardcoding values in separate files violates DRY principles, increases maintenance burden, and makes it difficult to track configuration differences. Any shared resource logic must be duplicated across files.",
+      "C": "Using shell scripts to modify Terraform files breaks the declarative nature of infrastructure-as-code and makes the infrastructure state unpredictable. Terraform should be the single source of truth.",
+      "D": "Manually creating resources in dev defeats the purpose of infrastructure-as-code and creates inconsistencies. All environments should be managed consistently through Terraform to ensure reproducibility and auditability."
+    },
+    "sources": [
+      "https://www.terraform.io/language/state/workspaces",
+      "https://www.terraform.io/language/values/variables#variable-definitions-tfvars-files"
+    ]
+  },
+  {
+    "question": "Your Docker application runs a Java service that takes 45 seconds to shut down gracefully. During a rolling deployment in Kubernetes/ECS, containers are being killed before shutdown completes, causing data loss. How should you fix this?",
+    "options": {
+      "A": "Increase the Dockerfile RUN timeout value",
+      "B": "Configure the termination grace period (stopTimeout in ECS or terminationGracePeriodSeconds in Kubernetes) to at least 45 seconds",
+      "C": "Remove the graceful shutdown logic and use kill -9 signals",
+      "D": "Deploy to EC2 instances instead of using container orchestration"
+    },
+    "answer": "B",
+    "explanation": "The termination grace period tells the orchestrator how long to wait before forcefully killing a container. Setting it to at least 45 seconds (in ECS: stopTimeout, in Kubernetes: terminationGracePeriodSeconds) allows the Java service time to complete graceful shutdown, flush connections, and persist data before the container is killed.",
+    "wrong_explanations": {
+      "A": "Dockerfile RUN timeout is for build-time commands and does not affect container shutdown behavior during deployment. This does not address the runtime termination issue.",
+      "C": "Removing graceful shutdown logic and using SIGKILL (-9) forces immediate termination, which will worsen data loss issues. Graceful shutdown is essential for safe deployments.",
+      "D": "Deploying to EC2 does not solve the problem. The issue is the orchestrator's default termination grace period, which can be configured in both Kubernetes and ECS without changing infrastructure."
+    },
+    "sources": [
+      "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#stopTimeout",
+      "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#termination-of-pods"
+    ]
+  },
+  {
+    "question": "Your CI/CD pipeline builds a Docker image, runs unit tests inside the container, and pushes it to ECR. The pipeline is slow because the image rebuilds from scratch on every commit, even when only documentation files changed. What optimization should you implement?",
+    "options": {
+      "A": "Use Docker layer caching and optimize the Dockerfile with .dockerignore to exclude non-code files",
+      "B": "Use a smaller base image (alpine instead of ubuntu)",
+      "C": "Split the pipeline into multiple parallel jobs for faster execution",
+      "D": "Skip pushing to ECR on every commit and only push on git tags"
+    },
+    "answer": "A",
+    "explanation": "Docker layer caching reuses previously built layers if the source files haven't changed. A .dockerignore file (similar to .gitignore) excludes documentation, logs, and other non-code files from the build context, preventing unnecessary cache invalidation. This significantly reduces build times by avoiding rebuilds when only docs change. This should be combined with proper Dockerfile structure (copy dependencies before code).",
+    "wrong_explanations": {
+      "B": "Using a smaller base image reduces final image size but does not prevent the rebuild of layers. The image will still rebuild from scratch if the Docker cache is invalidated by any file changes.",
+      "C": "Parallel jobs can improve pipeline speed but do not address the root cause\u2014the Docker layer cache being invalidated unnecessarily. Without fixing the cache invalidation, jobs will still run slowly.",
+      "D": "Only pushing on tags does not solve the slow build time. The build still runs on every commit and still rebuilds from scratch. This only reduces the push frequency, not the build duration."
+    },
+    "sources": [
+      "https://docs.docker.com/develop/dev-best-practices/#dockerfile-best-practices",
+      "https://docs.docker.com/engine/reference/builder/#dockerignore-file"
+    ]
+  }
+]
